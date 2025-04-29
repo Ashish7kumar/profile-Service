@@ -19,7 +19,7 @@ export default class UserService {
             }
         });
         
-        const token=jwt.sign({email:user.email,userId:user.id},JWT_SECRET as string ,{ expiresIn: "1d" })
+        const token=jwt.sign({user:user.name,userId:user.role},JWT_SECRET as string ,{ expiresIn: "1d" })
         return {user,token};
     }
     async loginUser({email,password}:LoginUserType){

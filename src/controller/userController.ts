@@ -4,6 +4,8 @@ import BadRequestError from "../errors/BadRequest.error";
 import registrationSchema from "../zod/registrationSchema.zod";
 import  UserService  from "../service/userSerive";
 const userService=new UserService();
+import AuthorizationRequest from "../types/autherizationRequest.type";
+import UnautherizedError from "../errors/Unautherized.error";
 export async function registerController(req:Request, res:Response) {
    
     const result=registrationSchema.safeParse(req.body);
@@ -16,7 +18,7 @@ export async function registerController(req:Request, res:Response) {
     
    
 }
-export async function getUserProfilesController(req:Request, res:Response) {
+export async function getUserProfilesController(req:Request | AuthorizationRequest, res:Response) {
   
         const users = await userService.getAllUsers();
         res.status(200).json(users);
@@ -26,9 +28,13 @@ export async function getUserProfilesController(req:Request, res:Response) {
 
 
 
-export async function getUserProfileByIdController(req: Request, res: Response) :Promise<void>{
+export async function getUserProfileByIdController(req:AuthorizationRequest, res: Response) :Promise<void>{
     const userName = req.params.userName; 
-    const user = await userService.getUserById(userName);
+    if(!req.user)
+    {
+        throw new BadRequestError('No user Name');
+    }
+    const user = await userService.getUserById(req.user);
     
     if (!user) {
          res.status(404).json({ message: "User not found" });
@@ -37,20 +43,27 @@ export async function getUserProfileByIdController(req: Request, res: Response) 
     
     res.status(200).json(user);
 }
-export async function updateUserProfileController(req:Request, res:Response) {
+export async function updateUserProfileController(req:AuthorizationRequest, res:Response) {
     
         const userName = req.params.id;
-       
-        const updatedUser = await userService.updateUser(userName,req.body);
+        if(!req.user)
+            {
+                throw new BadRequestError('No user Name');
+            }
+        const updatedUser = await userService.updateUser(req.user,req.body);
         if (!updatedUser) {
             throw new NotFoundError("User not found");
         }
         res.status(200).json({ message: "User updated successfully", user: updatedUser });
    
 }
-export async function deleteUserProfileController(req:Request,res:Response) {
-    const userName=req.params.id;
-    const deletedUser=await userService.deleteUser(userName);
+export async function deleteUserProfileController(req:AuthorizationRequest,res:Response) {
+
+    if(!req.user)
+        {
+            throw new BadRequestError('No user Name');
+        }
+    const deletedUser=await userService.deleteUser(req.user);
     res.status(200).json({
         message:"User Deleted successfully",deletedUser
     })
