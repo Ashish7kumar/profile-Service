@@ -30,14 +30,17 @@ export default class UserService {
         });
         if(!foundUser)
         {
-            return new NotFoundError('No such user is present')
+            throw new NotFoundError('No such user is present')
         }
-       const isCorrectPassword=await bcrypt.compare(foundUser.password,password);
+        
+       const isCorrectPassword=await bcrypt.compare(password,foundUser.password);
+       
         if(!isCorrectPassword)
         {
             throw new UnautherizedError('password is wrong');
         }
-        return foundUser;
+        const token= jwt.sign({user:foundUser.name,userId:foundUser.role},JWT_SECRET as string ,{ expiresIn: "1d" })
+        return {user:foundUser,token};
     }
 async getAllUsers()
 {
@@ -88,4 +91,5 @@ async getUserById(userName: string) {
     })
     return user;
   }
+ 
 }

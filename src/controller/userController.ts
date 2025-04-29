@@ -6,12 +6,16 @@ import  UserService  from "../service/userSerive";
 const userService=new UserService();
 import AuthorizationRequest from "../types/autherizationRequest.type";
 import UnautherizedError from "../errors/Unautherized.error";
+import loginUserSchema from "../zod/loginUser.schema";
 export async function registerController(req:Request, res:Response) {
    
     const result=registrationSchema.safeParse(req.body);
     if(!result.success)
     {
-        throw new BadRequestError("Error occured will Registring user",JSON.stringify(req.body))
+        result.error.format();
+        console.log(result);
+        const all_errors=result.error.errors.map(err=>err.message).join(",");
+    throw new BadRequestError(all_errors,all_errors);
     }
     const {user,token}=await userService.registerUser(req.body);
     res.status(201).json({ message: "User registered successfully", user,token});
@@ -26,7 +30,27 @@ export async function getUserProfilesController(req:Request | AuthorizationReque
     
 }
 
-
+export async function loginController(req:Request,res:Response):Promise<void>{
+    const zodResult=loginUserSchema.safeParse(req.body)
+    if(!zodResult.success){
+        zodResult.error.format();
+        const message = zodResult.error.errors.map(err => err.message).join(", ");
+        throw new BadRequestError('Request body of user login is wrong',message);
+    }
+    if(!req.body.email && ! req.body.password)
+    {
+        throw new BadRequestError('Email and password are required');
+    }
+    const result=await userService.loginUser(req.body);
+    if (!result || !result.user || !result.token) {
+        throw new Error('cant login User because output from login service is wrong');
+      }
+      res.status(200).json({
+        user:result.user,
+        token:result.token
+      })
+    
+}
 
 export async function getUserProfileByIdController(req:AuthorizationRequest, res: Response) :Promise<void>{
     const userName = req.params.userName; 
