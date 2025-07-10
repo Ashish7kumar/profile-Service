@@ -8,12 +8,14 @@ import AuthorizationRequest from "../types/autherizationRequest.type";
 import UnautherizedError from "../errors/Unautherized.error";
 import loginUserSchema from "../zod/loginUser.schema";
 export async function registerController(req:Request, res:Response) {
-   
+    
+    
     const result=registrationSchema.safeParse(req.body);
     if(!result.success)
-    {
+    {   
+       
         result.error.format();
-        console.log(result);
+       
         const all_errors=result.error.errors.map(err=>err.message).join(",");
     throw new BadRequestError(all_errors,all_errors);
     }

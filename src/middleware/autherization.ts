@@ -21,7 +21,7 @@ try{
 
     const secretKey = process.env.JWT_SECRET;
     const decoded = jwt.verify(token, secretKey);
-
+    
    
     req.user = decoded.user;
     req.role=decoded.role;

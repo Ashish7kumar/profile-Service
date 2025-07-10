@@ -18,7 +18,7 @@ export default class UserService {
                 name: userName,
             }
         });
-        
+
         const token=jwt.sign({user:user.name,userId:user.role},JWT_SECRET as string ,{ expiresIn: "1d" })
         return {user,token};
     }
